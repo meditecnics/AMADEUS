@@ -66,6 +66,8 @@ export function WorldlineShift({ transaction, onDone, onCovered }: {
     let started = false;
     let ending = false;
     let dipping = false;
+    /** The user asked to skip (click/Esc); fallbacks and the CSS lock skip internally. */
+    let userSkipped = false;
     let css = true;
     let stage: ShiftStageLease | null = null;
     let gpu: Renderer | null = null;
@@ -134,7 +136,7 @@ export function WorldlineShift({ transaction, onDone, onCovered }: {
             : snapshot.phase === 'ended' ? '世界线已锁定' : '世界线跃迁中';
         if (snapshot.phase === 'ended' && !ending) {
           ending = true;
-          leave(snapshot.outcome === 'fail', snapshot.skipRequested);
+          leave(snapshot.outcome === 'fail', userSkipped);
         }
       },
     });
@@ -218,6 +220,7 @@ export function WorldlineShift({ transaction, onDone, onCovered }: {
 
     skip.current = () => {
       if (!active || ending) return;
+      userSkipped = true;
       if (!started) {
         // Skipped before the first frame: start with whatever is ready and skip at once.
         if (raf) cancelAnimationFrame(raf);
